@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Website Detector</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #0a0a1a;
+            color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #888;
+            font-size: 1rem;
+        }
+
+        .checker-box {
+            background: #12122a;
+            border: 1px solid #2a2a5a;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 700px;
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 10px;
+            border: 1px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        input[type="text"]:focus {
+            border-color: #00d4ff;
+        }
+
+        button {
+            padding: 14px 28px;
+            background: #00d4ff;
+            color: #0a0a1a;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover { background: #00aacc; }
+
+        /* RISK METER */
+        .risk-meter {
+            display: none;
+            margin: 20px 0;
+        }
+
+        .risk-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .risk-bar-bg {
+            background: #1a1a3a;
+            border-radius: 10px;
+            height: 20px;
+            overflow: hidden;
+        }
+
+        .risk-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1s ease;
+            width: 0%;
+        }
+
+        /* RESULT BOX */
+        .result-box {
+            display: none;
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 20px;
+            border: 1px solid;
+        }
+
+        .result-box.safe {
+            background: #0a2a0a;
+            border-color: #00ff88;
+        }
+
+        .result-box.danger {
+            background: #2a0a0a;
+            border-color: #ff4444;
+        }
+
+        .result-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-score {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 16px;
+        }
+
+        .reasons-title {
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reason-item {
+            background: #ffffff10;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        /* HISTORY */
+        .history-box {
+            background: #12122a;
+            border: 1px solid #2a2a5a;
+            border-radius: 16px;
+            padding: 30px;
+            width: 100%;
+            max-width: 700px;
+        }
+
+        .history-box h3 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: #0a0a1a;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+        }
+
+        .history-url {
+            color: #aaa;
+            max-width: 70%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge.safe { background: #00ff8820; color: #00ff88; }
+        .badge.danger { background: #ff444420; color: #ff4444; }
+
+        .loading { display: none; text-align: center; color: #00d4ff; padding: 20px; }
+        .empty-history { color: #444; text-align: center; padding: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>🛡️ Phishing Website Detector</h1>
+        <p>Check any URL for phishing threats instantly</p>
+    </div>
+
+    <div class="checker-box">
+        <div class="input-group">
+            <input type="text" id="urlInput"
+                placeholder="Enter URL e.g. http://suspicious-site.com"
+                onkeypress="if(event.key==='Enter') checkURL()"/>
+            <button onclick="checkURL()">Check URL</button>
+        </div>
+
+        <div class="loading" id="loading">🔍 Analyzing URL...</div>
+
+        <!-- RISK METER -->
+        <div class="risk-meter" id="riskMeter">
+            <div class="risk-label">
+                <span>Risk Level</span>
+                <span id="riskPercent">0%</span>
+            </div>
+            <div class="risk-bar-bg">
+                <div class="risk-bar-fill" id="riskBar"></div>
+            </div>
+        </div>
+
+        <!-- RESULT -->
+        <div class="result-box" id="resultBox">
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-score" id="resultScore"></div>
+            <div class="reasons-title">Why was this flagged?</div>
+            <div id="reasonsList"></div>
+        </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div class="history-box">
+        <h3>📋 URL Check History</h3>
+        <div id="historyList">
+            <div class="empty-history">No URLs checked yet</div>
+        </div>
+    </div>
+
+<script>
+    let history = [];
+
+    async function checkURL() {
+        const url = document.getElementById('urlInput').value.trim();
+        if (!url) { alert('Please enter a URL!'); return; }
+
+        // Show loading
+        document.getElementById('loading').style.display = 'block';
+        document.getElementById('resultBox').style.display = 'none';
+        document.getElementById('riskMeter').style.display = 'none';
+
+        try {
+            const response = await fetch('http://127.0.0.1:5000/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            });
+
+            const data = await response.json();
+            displayResult(data);
+            addToHistory(data);
+
+        } catch (error) {
+            alert('Error: Make sure the Flask server is running!');
+        }
+
+        document.getElementById('loading').style.display = 'none';
+    }
+
+    function displayResult(data) {
+        const resultBox = document.getElementById('resultBox');
+        const riskMeter = document.getElementById('riskMeter');
+        const riskBar = document.getElementById('riskBar');
+        const riskPercent = document.getElementById('riskPercent');
+
+        // Show risk meter
+        riskMeter.style.display = 'block';
+        setTimeout(() => {
+            riskBar.style.width = data.risk_score + '%';
+            riskPercent.textContent = data.risk_score + '%';
+
+            // Color the bar based on risk
+            if (data.risk_score < 30) riskBar.style.background = '#00ff88';
+            else if (data.risk_score < 70) riskBar.style.background = '#ffaa00';
+            else riskBar.style.background = '#ff4444';
+        }, 100);
+
+        // Show result box
+        resultBox.style.display = 'block';
+        resultBox.className = 'result-box ' + (data.is_phishing ? 'danger' : 'safe');
+
+        document.getElementById('resultTitle').textContent = data.status;
+        document.getElementById('resultScore').textContent =
+            `Risk Score: ${data.risk_score}% | URL: ${data.url}`;
+
+        // Show reasons
+        const reasonsList = document.getElementById('reasonsList');
+        reasonsList.innerHTML = '';
+        data.reasons.forEach(reason => {
+            const div = document.createElement('div');
+            div.className = 'reason-item';
+            div.textContent = reason;
+            reasonsList.appendChild(div);
+        });
+    }
+
+    function addToHistory(data) {
+        history.unshift(data);
+        const historyList = document.getElementById('historyList');
+        historyList.innerHTML = '';
+
+        history.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = `
+                <span class="history-url">${item.url}</span>
+                <span class="badge ${item.is_phishing ? 'danger' : 'safe'}">
+                    ${item.is_phishing ? '🚨 Phishing' : '✅ Safe'}
+                </span>
+                <span style="color:#666">${item.risk_score}%</span>
+            `;
+            historyList.appendChild(div);
+        });
+    }
+</script>
+
+</body>
+</html>

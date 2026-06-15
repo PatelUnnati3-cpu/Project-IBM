@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Phishing Detector</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 380px;
+      min-height: 200px;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 16px;
+      color: #38bdf8;
+      font-weight: 700;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #1e293b;
+      color: #e2e8f0;
+      font-size: 13px;
+    }
+    button {
+      padding: 10px 16px;
+      background: #0ea5e9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    button:hover { background: #0284c7; }
+    .result {
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .result.safe { background: #064e3b; border: 1px solid #10b981; }
+    .result.suspicious { background: #451a03; border: 1px solid #f59e0b; }
+    .result.phishing { background: #450a0a; border: 1px solid #ef4444; }
+    .verdict {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .safe .verdict { color: #10b981; }
+    .suspicious .verdict { color: #f59e0b; }
+    .phishing .verdict { color: #ef4444; }
+    .score { font-size: 13px; color: #94a3b8; margin-bottom: 10px; }
+    .risk-bar {
+      height: 8px;
+      background: #1e293b;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .risk-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    .safe .risk-fill { background: #10b981; }
+    .suspicious .risk-fill { background: #f59e0b; }
+    .phishing .risk-fill { background: #ef4444; }
+    .reasons { font-size: 12px; color: #cbd5e1; }
+    .reasons ul { padding-left: 16px; margin-top: 4px; }
+    .reasons li { margin-bottom: 4px; }
+    .loading { text-align: center; color: #94a3b8; font-size: 13px; display: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    🛡️
+    <h1>Phishing Website Detector</h1>
+  </div>
+
+  <div class="input-row">
+    <input type="text" id="urlInput" placeholder="Enter URL to check...">
+    <button onclick="checkURL()">Check</button>
+  </div>
+
+  <div class="loading" id="loading">⏳ Analyzing URL...</div>
+
+  <div class="result" id="result">
+    <div class="verdict" id="verdict"></div>
+    <div class="score" id="score"></div>
+    <div class="risk-bar">
+      <div class="risk-fill" id="riskFill"></div>
+    </div>
+    <div class="reasons" id="reasons"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
